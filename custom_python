@@ -1,0 +1,109 @@
+# Python Environment Tools
+
+# User's directory in which to save create python environments
+PYTHON_VENV_ENVIRONMENTS_DIRECTORY=~/environments/python
+
+# Make sure that the environments directoyy always exists
+mkdir $PYTHON_VENV_ENVIRONMENTS_DIRECTORY -p
+
+# Set environment variables
+PYTHON_VENV_ENVIRONMENTS_DIRECTORY=$(readlink -f $PYTHON_VENV_ENVIRONMENTS_DIRECTORY)
+PYTHON_MODULE_NAME_PREFIX="apps/python3/"
+PYTHON_MODULE_VERSIONS=(3.6.15 3.8.16 3.9.16 3.10.5)
+
+alias python-help="echo 'Avalible Commands:
+    This Help Information:
+        python-help
+        help-python
+
+    Aliases:
+        python-distro-list
+        python-distro <full-python-version>
+        python-env-list
+        python-env-register <environment-name> <full-python-version>
+        python-env-create <environment-name> <full-python-version>
+        python-env <environment-name>
+'"
+alias help-python="python-help"
+
+
+
+# Unload any Python modules currently loaded
+function unload-python-modules() {
+    local python_version_string
+    for python_version_string in "${PYTHON_MODULE_VERSIONS[@]}"
+    do
+       module unload $PYTHON_MODULE_NAME_PREFIX$python_version
+    done
+}
+
+
+
+# List what versions of the Python interpreter are avalible
+function list-python-modules-avalible() {
+    local python_version_string
+    for python_version_string in "${PYTHON_MODULE_VERSIONS[@]}"
+    do
+       echo $python_version_string
+    done
+}
+
+alias python-distro-list="list-python-modules-avalible"
+
+
+
+# Load a specific version of the Python interpreter
+function load-python-module() {
+    local python_version="$1"
+    module load $PYTHON_MODULE_NAME_PREFIX$python_version
+}
+
+alias python-distro="load-python-module"
+
+
+
+# List what virtual environments are avalible
+function list-python-environments() {
+    ls $PYTHON_VENV_ENVIRONMENTS_DIRECTORY
+}
+
+alias python-env-list="list-python-environments"
+
+
+
+# Register an existing environment in the environments folder
+function register-python-environment() {
+    local env_name="$1"
+    local python_version="$2"
+    echo "module load $PYTHON_MODULE_NAME_PREFIX$python_version" > $PYTHON_VENV_ENVIRONMENTS_DIRECTORY/$env_name/module_autoload.sh
+}
+
+alias python-env-register="register-python-environment"
+
+
+
+# Creates a new environment in the environments folder
+function create-python-environment() {
+    local env_name="$1"
+    local python_version="$2"
+    deactivate
+    unload-python-modules
+    echo "module load $PYTHON_MODULE_NAME_PREFIX$python_version"
+    module load $PYTHON_MODULE_NAME_PREFIX$python_version
+    python3 -m venv $PYTHON_VENV_ENVIRONMENTS_DIRECTORY/$env_name
+    register-python-environment $env_name $python_version
+    activate-python-environment $env_name
+}
+
+alias python-env-create="create-python-environment"
+
+
+
+# Activates a registered Python virtual environment
+function activate-python-environment() {
+    local env_name="$1"
+    source $PYTHON_VENV_ENVIRONMENTS_DIRECTORY/$env_name/module_autoload.sh
+    source $PYTHON_VENV_ENVIRONMENTS_DIRECTORY/$env_name/bin/activate
+}
+
+alias python-env="activate-python-environment"

@@ -1,0 +1,27 @@
+# source this file from .bashrc to load all customisations
+
+
+
+# Load software
+
+# gridware
+if [[ $(flight env show-active | grep gridware | wc -l) -eq 0 ]]; then
+#if [[ ! -v SOFTWARE_LOAD_FLAG__gridware ]]; then
+    export SOFTWARE_LOAD_FLAG__gridware=1
+    flight env activate gridware
+fi
+
+# HDFView
+module load apps/hdfview/3.3.1
+
+# Anaconda and conda
+module load apps/anaconda3
+
+
+
+# Load aliases and functions
+
+folder=$(dirname "$(readlink -f ${BASH_SOURCE})")
+source $folder/custom_general
+source $folder/custom_slurm
+source $folder/custom_python

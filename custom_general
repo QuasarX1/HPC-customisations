@@ -1,0 +1,48 @@
+# General Linux Bash Aliases and Functions
+
+alias general-help="echo 'GENERAL CUSTOMISATIONS HELP INFORMATION
+
+Description:
+    A set of aliases and Bash functions to make using SLURM more convinient.
+
+Avalible Commands:
+    This Help Information:
+        general-help
+        help-general
+
+    Aliases:
+        python              -> python3
+        wt     (watch tail) -> watch tail -n 50
+        o      (open)       -> xdg-open
+        ls                  -> ls --group-directories-first --human-readable --color
+        quota               -> quota -s
+        count               -> count-files
+
+    Functions:
+        count-files [optional arguments to 'tree'] (counts files and folders using tree)
+'"
+
+alias help-general="general-help"
+
+
+
+# Make 'python' always point to 'python3'
+alias python="python3"
+
+# View the last 50 lines of a file and refresh every 2 seconds
+alias wt="watch tail -n 50"
+
+# Open a file in its default program (like double clicking a file in a GUI)
+alias o="xdg-open"
+
+# Customise default ls style
+alias ls="ls --group-directories-first --human-readable --color"
+
+# Make the quota command always use human readable format
+alias quota="quota -s"
+
+# Count the number of files and directories in a given directory
+function count-files() {
+    echo $(tree $@ | tail -n 1)
+}
+alias count="count-files"

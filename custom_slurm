@@ -1,0 +1,89 @@
+# SLURM Aliases and Functions
+
+alias slurm-help="echo 'SLURM CUSTOMISATIONS HELP INFORMATION
+
+Description:
+    A set of aliases and Bash functions to make using SLURM more convinient.
+
+Avalible Commands:
+    This Help Information:
+        slurm-help
+        help-slurm
+
+    Aliases:
+        sq    (SLURM queue)                -> squeue -u $USER -l
+        wsq   (watch SLURM queue)          -> watch squeue -u $USER -l
+        sjo   (SLURM job output)           -> get-slurm-job-file
+        sje   (SLURM job error)            -> get-slurm-job-error-file
+        wsjo  (watch SLURM job output)     -> watch-slurm-job
+        wsje  (watch SLURM job error)      -> watch-slurm-job-error
+        slive (request live slurm session) -> request-slurm-live-session
+
+    Functions:
+        request-slurm-live-session <SLURM srun time and partition arguments>
+        get-slurm-job-file <SLURM-job-ID>
+        get-slurm-job-error-file <SLURM-job-ID>
+        watch-slurm-job <SLURM-job-ID>
+        watch-slurm-job-error <SLURM-job-ID>
+'"
+
+alias help-slurm="slurm-help"
+
+
+
+# Show your SLURM queue
+alias sq="squeue -u $USER -l"
+
+# Display your SLURM queue and refresh every 2 seconds
+alias wsq="watch squeue -u $USER -l"
+
+
+
+# Request a live session on a node
+function request-slurm-live-session() {
+    srun --ntasks=1 --cpus-per-task=64 --threads-per-core=1 $@ --pty bash
+}
+
+alias slive="request-slurm-live-session"
+
+
+
+# Find the location of the SLURM output file for a queued/running job
+function get-slurm-job-file() {
+    local job_id="$1"
+    local stdout_file="$(scontrol show job "$job_id" | grep -E 'StdOut' | awk -F= '{print $2}')"
+    echo "$stdout_file"
+}
+
+alias sjo="get-slurm-job-file"
+
+
+
+# Display the tail of the specified SLURM output file (job must be running or recently finished)
+function watch-slurm-job() {
+    local job_id="$1"
+    watch tail -n 40 $(sjo "$job_id")
+}
+
+alias wsjo="watch-slurm-job"
+
+
+
+# Find the location of the (optional) SLURM error file for a queued/running job
+function get-slurm-job-error-file() {
+    local job_id="$1"
+    local stderr_file="$(scontrol show job "$job_id" | grep -E 'StdErr' | awk -F= '{print $2}')"
+    echo "$stderr_file"
+}
+
+alias sje="get-slurm-job-error-file"
+
+
+
+# Display the tail of the specified (optional) SLURM error file (job must be running or recently finished)
+function watch-slurm-job-error() {
+    local job_id="$1"
+    watch tail -n 40 $(get-slurm-job-error-file "$job_id")
+}
+
+alias wsje="watch-slurm-job-error"
