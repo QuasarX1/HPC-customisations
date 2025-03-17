@@ -9,7 +9,7 @@ mkdir $PYTHON_VENV_ENVIRONMENTS_DIRECTORY -p
 # Set environment variables
 PYTHON_VENV_ENVIRONMENTS_DIRECTORY=$(readlink -f $PYTHON_VENV_ENVIRONMENTS_DIRECTORY)
 PYTHON_MODULE_NAME_PREFIX="apps/python3/"
-PYTHON_MODULE_VERSIONS=(3.6.15 3.8.16 3.9.16 3.10.5)
+PYTHON_MODULE_VERSIONS=(3.6.15 3.8.16 3.9.16 3.10.5 3.12.7)
 
 alias python-help="echo 'Avalible Commands:
     This Help Information:
@@ -22,7 +22,17 @@ alias python-help="echo 'Avalible Commands:
         python-env-list
         python-env-register <environment-name> <full-python-version>
         python-env-create <environment-name> <full-python-version>
+        python-env-create-complete <environment-name> <full-python-version>
         python-env <environment-name>
+
+    User Functions (1:1 with aliases)
+        list-python-modules-avalible
+        load-python-module <full-python-version>
+        list-python-environments
+        register-python-environment <environment-name> <full-python-version>
+        create-python-environment <environment-name> <full-python-version>
+        create-python-environment-complete <environment-name> <full-python-version>
+        activate-python-environment <environment-name>
 '"
 alias help-python="python-help"
 
@@ -33,7 +43,10 @@ function unload-python-modules() {
     local python_version_string
     for python_version_string in "${PYTHON_MODULE_VERSIONS[@]}"
     do
-       module unload $PYTHON_MODULE_NAME_PREFIX$python_version
+        module unload $PYTHON_MODULE_NAME_PREFIX$python_version_string
+        if [[ "$python_version_string" == "3.12.7" ]]; then
+            module unload mpi/openmpi/4.0.5/intel-2021.2.0+ucx-1.8.0
+        fi
     done
 }
 
@@ -56,6 +69,9 @@ alias python-distro-list="list-python-modules-avalible"
 function load-python-module() {
     local python_version="$1"
     module load $PYTHON_MODULE_NAME_PREFIX$python_version
+    if [[ "$python_version" == "3.12.7" ]]; then
+        module load mpi/openmpi/4.0.5/intel-2021.2.0+ucx-1.8.0
+    fi
 }
 
 alias python-distro="load-python-module"
@@ -76,6 +92,9 @@ function register-python-environment() {
     local env_name="$1"
     local python_version="$2"
     echo "module load $PYTHON_MODULE_NAME_PREFIX$python_version" > $PYTHON_VENV_ENVIRONMENTS_DIRECTORY/$env_name/module_autoload.sh
+    if [[ "$python_version" == "3.12.7" ]]; then
+        echo "module load mpi/openmpi/4.0.5/intel-2021.2.0+ucx-1.8.0" >> $PYTHON_VENV_ENVIRONMENTS_DIRECTORY/$env_name/module_autoload.sh
+    fi
 }
 
 alias python-env-register="register-python-environment"
@@ -96,6 +115,21 @@ function create-python-environment() {
 }
 
 alias python-env-create="create-python-environment"
+
+# Creates a new environment in the environments folder (keeps any installed packages)
+function create-python-environment-complete() {
+    local env_name="$1"
+    local python_version="$2"
+    deactivate
+    unload-python-modules
+    echo "module load $PYTHON_MODULE_NAME_PREFIX$python_version"
+    module load $PYTHON_MODULE_NAME_PREFIX$python_version
+    python3 -m venv $PYTHON_VENV_ENVIRONMENTS_DIRECTORY/$env_name --system-site-packages
+    register-python-environment $env_name $python_version
+    activate-python-environment $env_name
+}
+
+alias python-env-create-complete="create-python-environment-complete"
 
 
 

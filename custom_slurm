@@ -11,12 +11,14 @@ Avalible Commands:
         help-slurm
 
     Aliases:
-        sq    (SLURM queue)                -> squeue -u $USER -l
-        wsq   (watch SLURM queue)          -> watch squeue -u $USER -l
+        sq    (SLURM queue)                -> squeue --me --format=\"%8i %9P %30j %.12T %.10M %.10l %.6D %R\"
+        wsq   (watch SLURM queue)          -> watch squeue --me --format=\"%8i %9P %30j %.12T %.10M %.10l %.6D %R\"
         sjo   (SLURM job output)           -> get-slurm-job-file
         sje   (SLURM job error)            -> get-slurm-job-error-file
         wsjo  (watch SLURM job output)     -> watch-slurm-job
         wsje  (watch SLURM job error)      -> watch-slurm-job-error
+        csjo  (cat SLURM job output)       -> cat-slurm-job
+        csje  (cat SLURM job error)        -> cat-slurm-job-error
         slive (request live slurm session) -> request-slurm-live-session
 
     Functions:
@@ -25,6 +27,8 @@ Avalible Commands:
         get-slurm-job-error-file <SLURM-job-ID>
         watch-slurm-job <SLURM-job-ID>
         watch-slurm-job-error <SLURM-job-ID>
+        cat-slurm-job <SLURM-job-ID>
+        cat-slurm-job-error <SLURM-job-ID>
 '"
 
 alias help-slurm="slurm-help"
@@ -32,16 +36,20 @@ alias help-slurm="slurm-help"
 
 
 # Show your SLURM queue
-alias sq="squeue -u $USER -l"
+#alias sq="squeue -u $USER -l"
+#alias sq='squeue --me --format="%8i %9P %30j %.12T %.10M %.10l %.6D %R"'
+alias sq='squeue --me --format="%8i %9P %30j %.12T %.10M %.10l %.6D %R"'
+export SQUEUE_FORMAT="%8i %.8u %9P %30j %.12T %.10M %.10l %.6D %R"
 
 # Display your SLURM queue and refresh every 2 seconds
-alias wsq="watch squeue -u $USER -l"
+alias wsq='watch squeue --me --format="%8i %9P %30j %.12T %.10M %.10l %.6D %R"'
 
 
 
 # Request a live session on a node
 function request-slurm-live-session() {
-    srun --ntasks=1 --cpus-per-task=64 --threads-per-core=1 $@ --pty bash
+    #srun --ntasks=1 --cpus-per-task=64 --threads-per-core=1 $@ --pty bash
+    srun --exclusive --threads-per-core=1 $@ --pty bash
 }
 
 alias slive="request-slurm-live-session"
@@ -62,10 +70,20 @@ alias sjo="get-slurm-job-file"
 # Display the tail of the specified SLURM output file (job must be running or recently finished)
 function watch-slurm-job() {
     local job_id="$1"
-    watch tail -n 40 $(sjo "$job_id")
+    watch tail -n 40 $(get-slurm-job-file "$job_id")
 }
 
 alias wsjo="watch-slurm-job"
+
+
+
+# cat the specified SLURM output file (job must be running or recently finished)
+function cat-slurm-job() {
+    local job_id="$1"
+    cat $(get-slurm-job-file "$job_id")
+}
+
+alias csjo="cat-slurm-job"
 
 
 
@@ -87,3 +105,13 @@ function watch-slurm-job-error() {
 }
 
 alias wsje="watch-slurm-job-error"
+
+
+
+# cat the specified (optional) SLURM error file (job must be running or recently finished)
+function cat-slurm-job-error() {
+    local job_id="$1"
+    cat $(get-slurm-job-error-file "$job_id")
+}
+
+alias csje="cat-slurm-job-error"

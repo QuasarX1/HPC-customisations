@@ -14,8 +14,11 @@ fi
 # HDFView
 module load apps/hdfview/3.3.1
 
-# Anaconda and conda
-module load apps/anaconda3
+# Python Versions
+module load apps/python3/3.12.7
+
+## Anaconda and conda
+#module load apps/anaconda3
 
 
 
