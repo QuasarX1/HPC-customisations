@@ -11,15 +11,26 @@ Avalible Commands:
         help-slurm
 
     Aliases:
-        sq    (SLURM queue)                -> squeue --me --format=\"%8i %9P %30j %.12T %.10M %.10l %.6D %R\"
-        wsq   (watch SLURM queue)          -> watch squeue --me --format=\"%8i %9P %30j %.12T %.10M %.10l %.6D %R\"
-        sjo   (SLURM job output)           -> get-slurm-job-file
-        sje   (SLURM job error)            -> get-slurm-job-error-file
-        wsjo  (watch SLURM job output)     -> watch-slurm-job
-        wsje  (watch SLURM job error)      -> watch-slurm-job-error
-        csjo  (cat SLURM job output)       -> cat-slurm-job
-        csje  (cat SLURM job error)        -> cat-slurm-job-error
-        slive (request live slurm session) -> request-slurm-live-session
+        sq        (SLURM queue):
+               -> squeue --me --format=\"%8i %9P %30j %.12T %.10M %.10l %.6D %R\"
+        wsq       (watch SLURM queue):
+               -> watch squeue --me --format=\"%8i %9P %30j %.12T %.10M %.10l %.6D %R\"
+        sjo       (SLURM job output): {args: <SLURM-job-ID>}
+               -> get-slurm-job-file
+        sje       (SLURM job error): {args: <SLURM-job-ID>}
+               -> get-slurm-job-error-file
+        wsjo      (watch SLURM job output): {args: <SLURM-job-ID>}
+               -> watch-slurm-job
+        wsje      (watch SLURM job error): {args: <SLURM-job-ID>}
+               -> watch-slurm-job-error
+        csjo      (cat SLURM job output): {args: <SLURM-job-ID>}
+               -> cat-slurm-job
+        csje      (cat SLURM job error): {args: <SLURM-job-ID>}
+               -> cat-slurm-job-error
+        slive     (request live slurm session): {args: <SLURM srun time and partition arguments>}
+               -> request-slurm-live-session
+        snotebook (start juypter server): {args: <python-env-name> <port> <SLURM srun time and partition arguments>}
+               -> start-remote-jupyter-server
 
     Functions:
         request-slurm-live-session <SLURM srun time and partition arguments>
@@ -29,6 +40,7 @@ Avalible Commands:
         watch-slurm-job-error <SLURM-job-ID>
         cat-slurm-job <SLURM-job-ID>
         cat-slurm-job-error <SLURM-job-ID>
+        start-remote-jupyter-server <python-env-name> <port> <SLURM srun time and partition arguments>
 '"
 
 alias help-slurm="slurm-help"
@@ -115,3 +127,13 @@ function cat-slurm-job-error() {
 }
 
 alias csje="cat-slurm-job-error"
+
+#
+function start-remote-jupyter-server() {
+    local python_env_name="$1"
+    local port="$2"
+    shift 2
+    sbatch $@ $(dirname "$(readlink -f ${BASH_SOURCE})")/slurm_jupyter_server.sh $python_env_name $port
+}
+
+alias snotebook="start-remote-jupyter-server"
